@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/thcntt3
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+mqtt:
+  broker:
+    url: tcp://broker.emqx.io:1883
+  client:
+    id: mqttx_77b13fa4
+    topic:
+      water: thcntt3/v1/device/water/level
+      led: thcntt3/v1/device/led/rpc
+server:
+  port: 8081

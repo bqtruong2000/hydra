@@ -1,0 +1,73 @@
+version: "3.9"
+services:
+  message-service:
+    image: message-service-image:0.0.1
+    container_name: message-service-container
+    build:
+      context: ./message-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - thcntt3-network
+    depends_on:
+      - hydra-postgres
+    environment:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://hydra-postgres:5432/thcntt3
+        SPRING_DATASOURCE_USERNAME: postgres
+        SPRING_DATASOURCE_PASSWORD: root
+        SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        SPRING_JPA_SHOW_SQL: "true"
+        MQTT_BROKER_URL: tcp://broker.emqx.io:1883
+        MQTT_CLIENT_ID: mqttx_77b13fa4
+        MQTT_CLIENT_TOPIC_WATER: thcntt3/v1/device/water/level
+        MQTT_CLIENT_TOPIC_LED: thcntt3/v1/device/led/rpc
+  hydra-core:
+    image: hydra-core-image:0.0.1
+    container_name: hydra-core-container
+    build:
+      context: ./hydra-core
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - thcntt3-network
+    depends_on:
+      message-service:
+        condition: service_started
+    environment:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://hydra-postgres:5432/thcntt3
+        SPRING_DATASOURCE_USERNAME: postgres
+        SPRING_DATASOURCE_PASSWORD: root
+        SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        SPRING_JPA_SHOW_SQL: "true"
+  hydra-platform:
+    image: hydra-platform-image:0.0.1
+    container_name: hydra-platform-container
+    build:
+      context: ./hydra-platform
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - thcntt3-network
+    depends_on:
+      hydra-core:
+        condition: service_started
+  hydra-postgres:
+    image: postgres:12.22
+    container_name: hydra-postgres-container
+    environment:
+      POSTGRES_DB: thcntt3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    networks:
+      - thcntt3-network
+networks:
+  thcntt3-network:
+    driver: bridge
+
